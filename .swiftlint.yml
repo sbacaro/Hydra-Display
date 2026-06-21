@@ -1,0 +1,45 @@
+# SwiftLint configuration for Hydra Display.
+# Optional: install SwiftLint (`brew install swiftlint`) and run `swiftlint`
+# from the repo root. CI does not block on lint.
+
+included:
+  - HydraDisplay
+
+excluded:
+  - build
+  - DerivedData
+  - "**/Assets.xcassets"
+
+disabled_rules:
+  - trailing_whitespace      # handled by .editorconfig
+  - todo
+
+opt_in_rules:
+  - empty_count
+  - closure_spacing
+  - contains_over_filter_count
+  - first_where
+  - sorted_first_last
+  - redundant_nil_coalescing
+
+line_length:
+  warning: 120
+  error: 160
+  ignores_comments: true
+  ignores_urls: true
+
+identifier_name:
+  min_length: 2
+  excluded: [id, x, y, w, h, m, a, b, t, r, n]
+
+type_name:
+  min_length: 3
+  max_length: 50
+
+function_body_length:
+  warning: 80
+  error: 150
+
+file_length:
+  warning: 500
+  error: 800

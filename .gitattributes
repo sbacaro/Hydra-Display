@@ -1,0 +1,25 @@
+# Normalize line endings.
+* text=auto eol=lf
+
+# Treat these as text.
+*.swift   text
+*.h       text
+*.m       text
+*.md      text
+*.yml     text
+*.yaml    text
+*.json    text
+*.sh      text eol=lf
+
+# Xcode project files: keep as-is, don't try to merge, hide from diffs by default.
+*.pbxproj  -text merge=union linguist-generated=true
+*.xcscheme text
+
+# Mark generated/asset files so GitHub language stats stay accurate.
+docs/assets/**     linguist-documentation
+*.png      binary
+*.jpg      binary
+*.icns     binary
+
+# Collapse generated files in PR diffs.
+*.pbxproj  linguist-generated=true

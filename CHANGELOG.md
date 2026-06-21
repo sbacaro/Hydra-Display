@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-06-21
+
+### Fixed
+- The PIP source picker now also lists windows on other Spaces (e.g. a full-screen Safari
+  video) and windows with no title, and hides background helper/agent apps.
+- PIP capture resolution is now capped (longest side ≤ 2560 px), preventing a system-wide
+  stall when picking a very large window such as a full-screen Retina video.
+- A captured window that enters or leaves **full screen** (which gives it a new window ID)
+  is now re-bound automatically, instead of going black.
+- PIP frames are **coalesced** — only the most recent frame is drawn — so a burst of
+  frames can no longer pile up on the main thread under load.
+
 ## [0.3.0] - 2026-06-21
 
 ### Added
@@ -97,7 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ad-hoc "Sign to Run Locally" build configuration (no Developer ID required).
 - Built with the **Swift 6** language mode (strict concurrency).
 
-[Unreleased]: https://github.com/sbacaro/Hydra-Display/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/sbacaro/Hydra-Display/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/sbacaro/Hydra-Display/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/sbacaro/Hydra-Display/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/sbacaro/Hydra-Display/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/sbacaro/Hydra-Display/releases/tag/v0.1.0

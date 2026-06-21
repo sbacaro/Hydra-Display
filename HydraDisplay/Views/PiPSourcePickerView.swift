@@ -17,6 +17,7 @@
 
 import SwiftUI
 import ScreenCaptureKit
+import AppKit
 
 struct PiPSourcePickerView: View {
     @Environment(DisplayManager.self) private var manager
@@ -123,29 +124,38 @@ struct PiPSourcePickerView: View {
         "com.apple.loginwindow",
     ]
 
+    /// True only for ordinary, Dock-visible apps — filters out menu-bar agents,
+    /// helper processes, and other background apps that own stray windows.
+    private static func isRegularApp(_ pid: pid_t) -> Bool {
+        NSRunningApplication(processIdentifier: pid)?.activationPolicy == .regular
+    }
+
     private func loadWindows() async {
         isLoading = true
         defer { isLoading = false }
         do {
-            // Excludes the desktop/wallpaper "backstop" windows and off-screen windows.
+            // Include windows on other Spaces (e.g. a full-screen Safari video) by NOT
+            // restricting to on-screen windows; we still exclude the desktop/wallpaper.
             let content = try await SCShareableContent.excludingDesktopWindows(
-                true, onScreenWindowsOnly: true)
+                true, onScreenWindowsOnly: false)
             let myPID = ProcessInfo.processInfo.processIdentifier
 
             windows = content.windows
                 .filter { window in
                     guard let app = window.owningApplication else { return false }
-                    return window.isOnScreen
-                        && window.windowLayer == 0              // normal app windows only
-                        && (window.title?.isEmpty == false)
-                        && window.frame.width >= 120 && window.frame.height >= 80
+                    // Note: no `isOnScreen` / title requirement — full-screen video
+                    // windows often live on another Space and carry no title.
+                    return window.windowLayer == 0              // normal app windows only
+                        && window.frame.width >= 160 && window.frame.height >= 120
                         && app.processID != myPID
                         && app.bundleIdentifier != AppInfo.bundleIdentifier
                         && !Self.blockedBundleIDs.contains(app.bundleIdentifier)
+                        && Self.isRegularApp(app.processID)    // skip background agents/helpers
                 }
                 .compactMap { window -> WindowItem? in
-                    guard let title = window.title, let app = window.owningApplication
-                    else { return nil }
+                    guard let app = window.owningApplication else { return nil }
+                    let raw = window.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    let title = raw.isEmpty ? app.applicationName : raw
                     return WindowItem(id: window.windowID, title: title,
                                       app: app.applicationName)
                 }

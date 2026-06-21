@@ -63,13 +63,13 @@ Built 100% natively for **macOS 26 (Tahoe)** with a SwiftUI **Liquid Glass** int
 Pre-built releases are published on the [Releases](../../releases) page.
 
 1. Download `HydraDisplay.app.zip` from the latest release and unzip it.
-2. Move `HydraDisplay.app` to `/Applications`.
+2. Move `Hydra Display.app` to `/Applications`.
 3. Because the app is **not notarized** (it uses a private API and ships without a
    Developer ID), Gatekeeper warns on first launch. Either:
    - **Right-click → Open**, then confirm in the dialog (macOS remembers it afterwards), **or**
    - remove the quarantine flag from Terminal:
      ```bash
-     xattr -dr com.apple.quarantine /Applications/HydraDisplay.app
+     xattr -dr com.apple.quarantine "/Applications/Hydra Display.app"
      ```
 
 See [docs/PRIVATE_API.md](docs/PRIVATE_API.md) for why notarization isn't possible.
@@ -94,7 +94,7 @@ open HydraDisplay.xcodeproj      # then press ⌘R
 Or from the command line:
 
 ```bash
-./build.sh        # builds a Release HydraDisplay.app into ./build/
+./build.sh        # builds a Release "Hydra Display.app" into ./build/
 ```
 
 The project is preconfigured for **"Sign to Run Locally"** (`CODE_SIGN_IDENTITY = "-"`,

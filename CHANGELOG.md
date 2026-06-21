@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-21
+
+### Added
+- **Unified logging & diagnostics export:** key events (display create/configure,
+  update checks and verification, capture errors) now go through `os.Logger`. A new
+  **Diagnostics** section in Settings exports a plain-text report — app/system info, the
+  current display topology with color adjustments, open PIP windows, and recent log
+  entries — to a location you choose, for attaching to bug reports.
+- **Picture-in-Picture controls:** each floating PIP window now has a hover-revealed
+  strip to set its **opacity** and turn on **click-through** (the pointer passes through
+  to whatever's behind). Multiple PIP windows can be open at once; a new **Picture in
+  Picture** section in the menu bar lists them all and is the reliable way to toggle
+  click-through back off or close a window.
+- **Software dimming & color temperature:** per-display brightness and a warm↔cool
+  white-point, applied through the public CoreGraphics gamma API — no DDC or extra
+  hardware, and it works on physical *and* virtual displays. Controls live on each
+  Overview card (sun button) and in the virtual-display detail pane; settings persist
+  per display and re-apply after sleep/wake, and quitting the app restores normal color.
+
+### Security
+- **Verified auto-updates:** before installing, the updater downloads the release's
+  published `SHA256SUMS.txt`, recomputes the SHA-256 of the downloaded `.app.zip`, and
+  refuses to install if the hash is missing or doesn't match — closing a tampering /
+  corruption vector on the privileged self-replace.
+
+### Changed
+- The application bundle is now named **`Hydra Display.app`** (the menu bar, Dock, and
+  Finder all show "Hydra Display"); download artifacts keep the `HydraDisplay-x.y.z`
+  prefix.
+- The Picture-in-Picture feed no longer draws the mouse pointer.
+- Removed the large "New Virtual Display" card from the Overview — use the **+** button in
+  the toolbar (or the menu bar) instead.
+
 ## [0.2.0] - 2026-06-21
 
 ### Added
@@ -64,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ad-hoc "Sign to Run Locally" build configuration (no Developer ID required).
 - Built with the **Swift 6** language mode (strict concurrency).
 
-[Unreleased]: https://github.com/sbacaro/Hydra-Display/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/sbacaro/Hydra-Display/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/sbacaro/Hydra-Display/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/sbacaro/Hydra-Display/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/sbacaro/Hydra-Display/releases/tag/v0.1.0

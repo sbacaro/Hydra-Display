@@ -69,6 +69,46 @@ struct UpdaterTests {
         #expect(release.appZipAsset?.name == "thing.zip")
     }
 
+    @Test("Release exposes the SHA256SUMS.txt checksum asset")
+    func checksumsAsset() throws {
+        let json = """
+        { "tag_name": "v0.2.0", "html_url": "https://x", "assets": [
+          { "name": "SHA256SUMS.txt", "browser_download_url": "https://x/SHA256SUMS.txt" },
+          { "name": "HydraDisplay-0.2.0.app.zip", "browser_download_url": "https://x/a.zip" }
+        ] }
+        """
+        let release = try JSONDecoder().decode(GitHubRelease.self, from: Data(json.utf8))
+        #expect(release.checksumsAsset?.name == "SHA256SUMS.txt")
+    }
+
+    @Test("Checksum manifest parsing")
+    func parseChecksum() {
+        let manifest = """
+        e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  HydraDisplay-0.2.0.dmg
+        AABBCCDDEEFF00112233445566778899AABBCCDDEEFF00112233445566778899  HydraDisplay-0.2.0.app.zip
+        """
+        // Matches by filename and lowercases the hash.
+        #expect(Updater.parseChecksum(manifest, for: "HydraDisplay-0.2.0.app.zip")
+                == "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899")
+        #expect(Updater.parseChecksum(manifest, for: "HydraDisplay-0.2.0.dmg")
+                == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+        // Unknown file → nil.
+        #expect(Updater.parseChecksum(manifest, for: "nope.zip") == nil)
+        // Binary-mode "*" prefix on the filename is tolerated.
+        #expect(Updater.parseChecksum("dead  *thing.zip", for: "thing.zip") == "dead")
+    }
+
+    @Test("SHA-256 of a file matches a known digest")
+    func sha256File() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("hydra-sha-\(UUID().uuidString).bin")
+        try Data("abc".utf8).write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+        // Known SHA-256("abc").
+        #expect(try Updater.sha256(ofFileAt: url)
+                == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+    }
+
     @MainActor
     @Test("A fresh updater starts idle and not busy")
     func initialState() {

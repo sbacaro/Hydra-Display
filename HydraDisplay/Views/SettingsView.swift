@@ -15,6 +15,8 @@
 //
 
 import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @Bindable var settings: AppSettings
@@ -54,8 +56,37 @@ struct SettingsView: View {
                         .font(.callout)
                 }
             }
+
+            Section("Diagnostics") {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Export Diagnostics…")
+                        Text("A report (app, system, displays, recent logs) to attach when "
+                             + "reporting an issue. Saved only where you choose.")
+                            .font(.caption).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer()
+                    Button("Export…") { exportDiagnostics() }
+                }
+            }
         }
         .formStyle(.grouped)
+    }
+
+    private func exportDiagnostics() {
+        let report = Diagnostics.generate()
+        let panel = NSSavePanel()
+        panel.title = "Export Diagnostics"
+        panel.nameFieldStringValue = Diagnostics.suggestedFilename
+        panel.allowedContentTypes = [.plainText]
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try report.write(to: url, atomically: true, encoding: .utf8)
+            Log.app.info("Diagnostics exported")
+        } catch {
+            settings.lastError = "Couldn't save diagnostics: \(error.localizedDescription)"
+        }
     }
 
     private var updates: some View {

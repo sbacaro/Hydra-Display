@@ -68,6 +68,8 @@ struct WindowAccessor: NSViewRepresentable {
 struct PiPContentView: View {
     let source: CaptureSource
     @State private var controller = PiPStreamController()
+    @State private var session: PiPSession?
+    @State private var hovering = false
 
     var body: some View {
         ZStack {
@@ -83,15 +85,76 @@ struct PiPContentView: View {
             }
         }
         .frame(minWidth: 240, minHeight: 150)
+        .overlay(alignment: .top) {
+            if hovering, let session, !session.clickThrough {
+                controlBar(session)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.smooth(duration: 0.16), value: hovering)
+        .onHover { hovering = $0 }
         .background(WindowAccessor { window in
-            window.level = .floating
-            window.collectionBehavior.insert(.canJoinAllSpaces)
-            window.collectionBehavior.insert(.fullScreenAuxiliary)
-            window.isMovableByWindowBackground = true
-            window.titlebarAppearsTransparent = true
-            window.title = source.title
+            configure(window)
         })
         .task(id: source) { await controller.start(source) }
-        .onDisappear { Task { @MainActor in await controller.stop() } }
+        .onDisappear {
+            if let session { PiPManager.shared.unregister(session) }
+            Task { @MainActor in await controller.stop() }
+        }
+    }
+
+    // MARK: Floating control strip (revealed on hover)
+
+    private func controlBar(_ session: PiPSession) -> some View {
+        HStack(spacing: Theme.Space.m) {
+            Image(systemName: "circle.lefthalf.filled").font(.caption)
+            Slider(value: Binding(get: { session.opacity },
+                                  set: { session.setOpacity($0) }),
+                   in: PiPSession.minOpacity...1.0)
+                .frame(width: 90)
+                .help("Opacity")
+
+            Divider().frame(height: 16)
+
+            Button {
+                session.setClickThrough(true)
+            } label: {
+                Image(systemName: "cursorarrow.click.badge.clock")
+            }
+            .help("Click-through (pointer passes through). Turn it off from the menu bar.")
+
+            Button {
+                session.close()
+            } label: {
+                Image(systemName: "xmark")
+            }
+            .help("Close")
+        }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.plain)
+        .foregroundStyle(.white)
+        .padding(.horizontal, Theme.Space.m)
+        .padding(.vertical, Theme.Space.s)
+        .background(.ultraThinMaterial, in: Capsule())
+        .padding(.top, Theme.Space.s)
+    }
+
+    private func configure(_ window: NSWindow) {
+        window.level = .floating
+        window.collectionBehavior.insert(.canJoinAllSpaces)
+        window.collectionBehavior.insert(.fullScreenAuxiliary)
+        window.isMovableByWindowBackground = true
+        window.titlebarAppearsTransparent = true
+        window.title = source.title
+        // Register a session once the window exists (deferred off the view update).
+        if session == nil {
+            DispatchQueue.main.async {
+                guard session == nil else { return }
+                let new = PiPSession(title: source.title, window: window)
+                new.setOpacity(window.alphaValue)
+                session = new
+                PiPManager.shared.register(new)
+            }
+        }
     }
 }

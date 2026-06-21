@@ -409,13 +409,14 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				OTHER_LDFLAGS = (
 					"-framework",
 					CoreGraphics,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = app.hydradisplay.HydraDisplay;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Hydra Display";
+				PRODUCT_MODULE_NAME = HydraDisplay;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "HydraDisplay/HydraDisplay-Bridging-Header.h";
 				SWIFT_VERSION = 6.0;
@@ -440,13 +441,14 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				OTHER_LDFLAGS = (
 					"-framework",
 					CoreGraphics,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = app.hydradisplay.HydraDisplay;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Hydra Display";
+				PRODUCT_MODULE_NAME = HydraDisplay;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "HydraDisplay/HydraDisplay-Bridging-Header.h";
 				SWIFT_VERSION = 6.0;
@@ -463,13 +465,13 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.hydradisplay.HydraDisplayTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HydraDisplay.app/Contents/MacOS/HydraDisplay";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Hydra Display.app/Contents/MacOS/Hydra Display";
 			};
 			name = Debug;
 		};
@@ -483,13 +485,13 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.hydradisplay.HydraDisplayTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HydraDisplay.app/Contents/MacOS/HydraDisplay";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Hydra Display.app/Contents/MacOS/Hydra Display";
 			};
 			name = Release;
 		};
@@ -502,7 +504,7 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.hydradisplay.HydraDisplayUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -521,7 +523,7 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.hydradisplay.HydraDisplayUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;

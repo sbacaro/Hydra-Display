@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# build.sh — build a Release HydraDisplay.app without a Developer ID.
-# Output: ./build/Build/Products/Release/HydraDisplay.app
+# build.sh — build a Release "Hydra Display.app" without a Developer ID.
+# Output: ./build/Build/Products/Release/Hydra Display.app
 #
 set -euo pipefail
 
@@ -19,7 +19,7 @@ xcodebuild \
   DEVELOPMENT_TEAM="" \
   build
 
-APP="build/Build/Products/Release/HydraDisplay.app"
+APP="build/Build/Products/Release/Hydra Display.app"
 echo ""
 echo "==> Done."
 echo "    App: $APP"
@@ -27,4 +27,4 @@ echo ""
 echo "To run:        open \"$APP\""
 echo "To distribute: zip it and attach to a GitHub Release. Tell users to"
 echo "               right-click → Open, or run:"
-echo "               xattr -dr com.apple.quarantine /Applications/HydraDisplay.app"
+echo "               xattr -dr com.apple.quarantine '/Applications/Hydra Display.app'"

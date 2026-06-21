@@ -22,6 +22,7 @@
 
 import Foundation
 import AppKit
+import CryptoKit
 import Observation
 
 // MARK: - GitHub release model
@@ -58,6 +59,11 @@ struct GitHubRelease: Decodable, Sendable {
         assets.first { $0.name.hasSuffix(".app.zip") }
             ?? assets.first { $0.name.hasSuffix(".zip") }
     }
+
+    /// The published checksum manifest (`SHA256SUMS.txt`) used to verify downloads.
+    var checksumsAsset: Asset? {
+        assets.first { $0.name == "SHA256SUMS.txt" }
+    }
 }
 
 enum UpdaterError: LocalizedError {
@@ -66,6 +72,8 @@ enum UpdaterError: LocalizedError {
     case appNotFound
     case installFailed(String)
     case cancelled
+    case integrityUnavailable
+    case integrityFailed(expected: String, actual: String)
 
     var errorDescription: String? {
         switch self {
@@ -74,6 +82,12 @@ enum UpdaterError: LocalizedError {
         case .appNotFound: return "The downloaded update didn't contain the app."
         case .installFailed(let m): return "Couldn't install the update: \(m)"
         case .cancelled: return "Update cancelled."
+        case .integrityUnavailable:
+            return "Couldn't verify the update — its published checksum is missing. "
+                 + "Installation was cancelled for safety."
+        case .integrityFailed:
+            return "The update failed its integrity check and was not installed. "
+                 + "The download may be corrupted or tampered with."
         }
     }
 }
@@ -121,8 +135,12 @@ final class Updater {
             let (data, _) = try await URLSession.shared.data(for: request)
             let release = try JSONDecoder().decode(GitHubRelease.self, from: data)
             latest = release
-            phase = Self.isNewer(release.version, than: AppInfo.version) ? .available : .upToDate
+            let newer = Self.isNewer(release.version, than: AppInfo.version)
+            phase = newer ? .available : .upToDate
+            let verdict = newer ? "update available" : "up to date"
+            Log.updater.info("Checked: latest \(release.version, privacy: .public), current \(AppInfo.version, privacy: .public) — \(verdict, privacy: .public)")
         } catch {
+            Log.updater.error("Check failed: \(error.localizedDescription, privacy: .public)")
             phase = .failed(error.localizedDescription)
         }
     }
@@ -136,11 +154,16 @@ final class Updater {
         }
         phase = .downloading
         do {
-            let newApp = try await Self.downloadAndExtract(from: asset.browserDownloadURL)
+            // Fetch the published checksum first; if it's missing we refuse to install.
+            let expected = try await Self.expectedChecksum(for: asset, in: release)
+            let newApp = try await Self.downloadVerifyExtract(asset: asset,
+                                                              expectedSHA256: expected)
+            Log.updater.info("Download verified (SHA-256 OK); installing \(release.version, privacy: .public)")
             phase = .installing
             try installPrivileged(replacing: Bundle.main.bundleURL, with: newApp)
             relaunch(Bundle.main.bundleURL)
         } catch {
+            Log.updater.error("Update failed: \(error.localizedDescription, privacy: .public)")
             phase = .failed(error.localizedDescription)
         }
     }
@@ -160,10 +183,46 @@ final class Updater {
         return false
     }
 
-    // MARK: Download + extract (off the main actor, no visible terminal)
+    // MARK: Integrity
 
-    private nonisolated static func downloadAndExtract(from url: URL) async throws -> URL {
-        let (tmp, _) = try await URLSession.shared.download(from: url)
+    /// Downloads the release's `SHA256SUMS.txt` and returns the expected hash for
+    /// the given asset. Throws `integrityUnavailable` if no usable checksum exists.
+    private nonisolated static func expectedChecksum(
+        for asset: GitHubRelease.Asset, in release: GitHubRelease) async throws -> String {
+        guard let sums = release.checksumsAsset else { throw UpdaterError.integrityUnavailable }
+        var request = URLRequest(url: sums.browserDownloadURL)
+        request.setValue("HydraDisplay", forHTTPHeaderField: "User-Agent")
+        let (data, _) = try await URLSession.shared.data(for: request)
+        let text = String(decoding: data, as: UTF8.self)
+        guard let hash = parseChecksum(text, for: asset.name) else {
+            throw UpdaterError.integrityUnavailable
+        }
+        return hash
+    }
+
+    /// Parses a `shasum`-style manifest (`<hex>␠␠<filename>`) for one file's hash.
+    nonisolated static func parseChecksum(_ manifest: String, for filename: String) -> String? {
+        for line in manifest.split(whereSeparator: \.isNewline) {
+            let fields = line.split(separator: " ", omittingEmptySubsequences: true)
+            guard fields.count >= 2, let hex = fields.first else { continue }
+            // Binary mode prefixes the name with "*"; strip it before comparing.
+            var name = String(fields[fields.count - 1])
+            if name.hasPrefix("*") { name.removeFirst() }
+            if name == filename { return String(hex).lowercased() }
+        }
+        return nil
+    }
+
+    nonisolated static func sha256(ofFileAt url: URL) throws -> String {
+        let data = try Data(contentsOf: url, options: .mappedIfSafe)
+        return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    // MARK: Download + verify + extract (off the main actor, no visible terminal)
+
+    private nonisolated static func downloadVerifyExtract(
+        asset: GitHubRelease.Asset, expectedSHA256: String) async throws -> URL {
+        let (tmp, _) = try await URLSession.shared.download(from: asset.browserDownloadURL)
 
         let fm = FileManager.default
         let work = fm.temporaryDirectory
@@ -172,6 +231,13 @@ final class Updater {
 
         let zip = work.appendingPathComponent("update.zip")
         try fm.moveItem(at: tmp, to: zip)
+
+        // Verify integrity BEFORE unpacking or touching the installed app.
+        let actual = try sha256(ofFileAt: zip)
+        guard actual == expectedSHA256.lowercased() else {
+            try? fm.removeItem(at: work)
+            throw UpdaterError.integrityFailed(expected: expectedSHA256, actual: actual)
+        }
 
         let extracted = work.appendingPathComponent("extracted", isDirectory: true)
         try runTool("/usr/bin/ditto", ["-x", "-k", zip.path, extracted.path])

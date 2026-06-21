@@ -91,10 +91,13 @@ final class DisplayManager {
             let handle = try VirtualDisplayBridge.create(spec)
             virtualHandles.append(handle)
             persist()
+            Log.displays.info(
+                "Created virtual display \"\(spec.name, privacy: .public)\" \(spec.maxPixelsWide, privacy: .public)×\(spec.maxPixelsHigh, privacy: .public)")
             // Give CoreGraphics a beat to register the new display.
             scheduleRefresh(after: .milliseconds(300))
             return handle
         } catch {
+            Log.displays.error("Create failed: \(error.localizedDescription, privacy: .public)")
             lastError = error.localizedDescription
             return nil
         }
@@ -246,6 +249,7 @@ final class DisplayManager {
         let result = CGCompleteDisplayConfiguration(config, .permanently)
         if result != .success {
             lastError = "Could not apply the display configuration (CGError \(result.rawValue))."
+            Log.displays.error("Display configuration failed (CGError \(result.rawValue, privacy: .public)).")
         }
         refresh()
     }

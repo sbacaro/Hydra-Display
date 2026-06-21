@@ -32,6 +32,7 @@ struct DisplayDetailView: View {
                 hero
                 identitySection
                 resolutionSection
+                colorSection
                 modesSection
                 mirrorSection
                 viewerButton
@@ -91,6 +92,21 @@ struct DisplayDetailView: View {
                 }
                 Text("Switch the live resolution of this display.")
                     .font(.caption).foregroundStyle(.secondary)
+            } else {
+                Text("Waiting for the display to come online…")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var colorSection: some View {
+        SectionCard("Color & Brightness", systemImage: "sun.max") {
+            if liveInfo != nil {
+                Text("Software dimming and white-point, applied with display gamma — "
+                     + "no extra hardware needed.")
+                    .font(.caption).foregroundStyle(.secondary)
+                DisplayColorControls(displayID: handle.cgDisplayID)
+                    .padding(.top, Theme.Space.xs)
             } else {
                 Text("Waiting for the display to come online…")
                     .font(.subheadline).foregroundStyle(.secondary)

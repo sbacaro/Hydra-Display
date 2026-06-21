@@ -183,7 +183,7 @@ struct ContentView: View {
     private var detail: some View {
         switch selection {
         case .overview, .none:
-            OverviewView(onCreate: { showingCreateSheet = true })
+            OverviewView()
         case .arrangement:
             ArrangementView()
         case .profiles:

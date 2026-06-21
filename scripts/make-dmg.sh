@@ -2,7 +2,7 @@
 #
 # make-dmg.sh — build a custom, branded .dmg from a built .app.
 #
-# Usage:  scripts/make-dmg.sh <path/to/HydraDisplay.app> <output.dmg>
+# Usage:  scripts/make-dmg.sh "<path/to/Hydra Display.app>" <output.dmg>
 #
 # Requires `create-dmg` (https://github.com/create-dmg/create-dmg):
 #     brew install create-dmg

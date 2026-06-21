@@ -1,23 +1,25 @@
 #!/usr/bin/env bash
 #
-# release.sh — one-command release for Hydra Display.
+# release.sh — release helper for Hydra Display.
 #
-# It will, in order:
-#   1. Build a Release HydraDisplay.app (ad-hoc signed, no Developer ID)
-#   2. Package a branded .dmg and a .zip, with SHA-256 checksums
-#   3. Commit & push the current branch
-#   4. Create and push the git tag (vX.Y.Z)
-#   5. Create the GitHub release, attach the release notes, and upload the assets
+# Run it with no arguments and it asks what you want to do:
 #
-# Requirements (all on macOS):
-#   - Xcode 26+            (xcodebuild)
-#   - create-dmg           (brew install create-dmg)
-#   - GitHub CLI, signed in (brew install gh && gh auth login)
+#   • Push only     — commit & push the current branch
+#   • Full release  — build, package (.dmg + .app.zip + checksums), push, tag,
+#                     and publish the GitHub release
 #
-# Usage:
-#   scripts/release.sh                 # full release
+# Or skip the prompt with a flag:
+#
+#   scripts/release.sh --push-only     # commit & push only
+#   scripts/release.sh --full          # the whole release
 #   scripts/release.sh --dry-run       # build + package only (no git/GitHub)
 #   scripts/release.sh --skip-release  # build, package, push, tag (no GitHub release)
+#   scripts/release.sh --build-only    # just compile (quick sanity check)
+#
+# Requirements (full release, all on macOS):
+#   - Xcode 26+   (xcodebuild)
+#   - create-dmg  (brew install create-dmg)
+#   - gh, signed in (brew install gh && gh auth login)
 #
 set -euo pipefail
 
@@ -27,146 +29,179 @@ set -euo pipefail
 REPO_SLUG="sbacaro/Hydra-Display"
 PROJECT="HydraDisplay.xcodeproj"
 SCHEME="HydraDisplay"
-APP_NAME="HydraDisplay"
+APP_NAME="HydraDisplay"            # prefix for download artifacts (no spaces, clean URLs)
+APP_BUNDLE="Hydra Display"         # the .app bundle name on disk (PRODUCT_NAME)
 CONFIG="Release"
 BRANCH="main"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
+BUILD_DIR="$ROOT/build"; DERIVED="$BUILD_DIR/DerivedData"; DIST="$ROOT/dist"
 
-BUILD_DIR="$ROOT/build"
-DERIVED="$BUILD_DIR/DerivedData"
-DIST="$ROOT/dist"
+# ----------------------------------------------------------------------------
+# Pretty output
+# ----------------------------------------------------------------------------
+if [[ -t 1 ]]; then
+  B=$'\033[1m'; D=$'\033[2m'; R=$'\033[0m'
+  RED=$'\033[31m'; GRN=$'\033[32m'; YLW=$'\033[33m'; CYN=$'\033[36m'
+else
+  B=; D=; R=; RED=; GRN=; YLW=; CYN=
+fi
 
-DRY_RUN=false
-SKIP_RELEASE=false
-BUILD_ONLY=false
+title() { printf "\n${B}${CYN}❯ %s${R}\n" "$1"; }
+info()  { printf "  ${D}%s${R}\n" "$1"; }
+ok()    { printf "  ${GRN}✓${R} %s\n" "$1"; }
+warn()  { printf "  ${YLW}!${R} %s\n" "$1"; }
+die()   { printf "\n${RED}✗ %s${R}\n" "$1" >&2; exit 1; }
+
+# run_step "Label" cmd args… — runs quietly with a spinner; only shows output on failure.
+run_step() {
+  local label="$1"; shift
+  local log; log="$(mktemp)"
+  ( "$@" ) >"$log" 2>&1 &
+  local pid=$! spin='|/-\' i=0
+  if [[ -t 1 ]]; then
+    while kill -0 "$pid" 2>/dev/null; do
+      i=$(( (i + 1) % 4 ))
+      printf "\r  ${CYN}%s${R} %s" "${spin:$i:1}" "$label"
+      sleep 0.1
+    done
+  fi
+  if wait "$pid"; then
+    printf "\r  ${GRN}✓${R} %s\033[K\n" "$label"; rm -f "$log"
+  else
+    printf "\r  ${RED}✗${R} %s\033[K\n" "$label"
+    printf "\n${RED}Failed — last 40 lines of output:${R}\n"; tail -n 40 "$log"; rm -f "$log"
+    exit 1
+  fi
+}
+
+# ----------------------------------------------------------------------------
+# Mode selection
+# ----------------------------------------------------------------------------
+MODE=""; DRY_RUN=false; SKIP_RELEASE=false; BUILD_ONLY=false
 for arg in "$@"; do
   case "$arg" in
-    --dry-run) DRY_RUN=true ;;
-    --skip-release) SKIP_RELEASE=true ;;
-    --build-only) BUILD_ONLY=true; DRY_RUN=true ;;
-    *) echo "Unknown option: $arg" >&2; exit 2 ;;
+    --push-only)    MODE="push" ;;
+    --full)         MODE="full" ;;
+    --dry-run)      MODE="full"; DRY_RUN=true ;;
+    --skip-release) MODE="full"; SKIP_RELEASE=true ;;
+    --build-only)   MODE="full"; BUILD_ONLY=true; DRY_RUN=true ;;
+    -h|--help)      sed -n '2,28p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) die "Unknown option: $arg" ;;
   esac
 done
 
-say() { printf "\n\033[1;33m==> %s\033[0m\n" "$1"; }
-die() { printf "\033[1;31merror:\033[0m %s\n" "$1" >&2; exit 1; }
+choose_mode() {
+  printf "\n${B}${CYN}  Hydra Display · Release${R}\n\n"
+  printf "    ${B}1${R}  Push only      ${D}commit & push the current branch${R}\n"
+  printf "    ${B}2${R}  Full release   ${D}build, package, tag & publish to GitHub${R}\n"
+  printf "    ${B}q${R}  Cancel\n\n"
+  local choice; read -rp "  ${B}Choose${R} [1/2/q]: " choice
+  case "$choice" in
+    1) MODE="push" ;;
+    2) MODE="full" ;;
+    ""|q|Q) info "Cancelled."; exit 0 ;;
+    *) die "Invalid choice: $choice" ;;
+  esac
+}
 
-# ----------------------------------------------------------------------------
-# 0. Pre-flight
-# ----------------------------------------------------------------------------
-say "Checking tools"
-command -v xcodebuild >/dev/null || die "xcodebuild not found (install Xcode 26+)."
-if ! $BUILD_ONLY; then
-  command -v create-dmg >/dev/null || die "create-dmg not found — run: brew install create-dmg"
-fi
-if ! $DRY_RUN; then
-  command -v gh >/dev/null || die "GitHub CLI not found — run: brew install gh"
-  gh auth status >/dev/null 2>&1 || die "Not signed in to GitHub — run: gh auth login"
-fi
-xcodebuild -version
-
-# ----------------------------------------------------------------------------
-# 1. Resolve version -> tag and release notes
-# ----------------------------------------------------------------------------
-say "Reading version from the project"
-VERSION="$(xcodebuild -project "$PROJECT" -scheme "$SCHEME" -configuration "$CONFIG" \
-  -showBuildSettings 2>/dev/null \
-  | awk -F' = ' '/ MARKETING_VERSION /{print $2; exit}')"
-[[ -n "${VERSION:-}" ]] || die "Could not read MARKETING_VERSION."
-TAG="v$VERSION"
-NOTES="docs/releases/$TAG.md"
-echo "Version: $VERSION   Tag: $TAG"
-if ! $BUILD_ONLY; then
-  [[ -f "$NOTES" ]] || die "Release notes not found at $NOTES"
+if [[ -z "$MODE" ]]; then
+  if [[ -t 0 ]]; then choose_mode
+  else die "No mode given and not a TTY — pass --push-only or --full."; fi
 fi
 
 # ----------------------------------------------------------------------------
-# 2. Build
+# Push only
 # ----------------------------------------------------------------------------
-say "Building $APP_NAME ($CONFIG, ad-hoc signed)"
-rm -rf "$DERIVED"
-xcodebuild \
-  -project "$PROJECT" \
-  -scheme "$SCHEME" \
-  -configuration "$CONFIG" \
-  -derivedDataPath "$DERIVED" \
-  CODE_SIGN_IDENTITY="-" \
-  CODE_SIGNING_REQUIRED=NO \
-  CODE_SIGNING_ALLOWED=YES \
-  DEVELOPMENT_TEAM="" \
-  clean build
-
-APP_PATH="$DERIVED/Build/Products/$CONFIG/$APP_NAME.app"
-[[ -d "$APP_PATH" ]] || die "Build succeeded but app not found at $APP_PATH"
-
-if $BUILD_ONLY; then
-  say "Build-only complete — the app compiled cleanly (Swift 6)."
-  echo "App: $APP_PATH"
-  exit 0
-fi
+do_push() {
+  title "Push"
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "Not a git repository."
+  local branch; branch="$(git rev-parse --abbrev-ref HEAD)"
+  if [[ -n "$(git status --porcelain)" ]]; then
+    local msg; read -rp "  ${B}Commit message${R} [chore: update]: " msg
+    msg="${msg:-chore: update}"
+    git add -A
+    run_step "Committing changes" git commit -m "$msg"
+  else
+    info "Working tree clean — nothing to commit."
+  fi
+  run_step "Pushing $branch" git push origin "$branch"
+  ok "Pushed ${B}$branch${R}."
+}
 
 # ----------------------------------------------------------------------------
-# 3. Package: .dmg + .zip + checksums
+# Full release
 # ----------------------------------------------------------------------------
-say "Packaging artifacts"
-rm -rf "$DIST"; mkdir -p "$DIST"
-DMG="$DIST/$APP_NAME-$VERSION.dmg"
-ZIP="$DIST/$APP_NAME-$VERSION.app.zip"
+do_full() {
+  title "Pre-flight"
+  command -v xcodebuild >/dev/null || die "xcodebuild not found (install Xcode 26+)."
+  $BUILD_ONLY || command -v create-dmg >/dev/null || die "create-dmg not found — brew install create-dmg"
+  if ! $DRY_RUN; then
+    command -v gh >/dev/null || die "GitHub CLI not found — brew install gh"
+    gh auth status >/dev/null 2>&1 || die "Not signed in to GitHub — run: gh auth login"
+  fi
+  ok "Tools ready."
 
-"$ROOT/scripts/make-dmg.sh" "$APP_PATH" "$DMG"
-ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP"
+  title "Version"
+  local version
+  version="$(xcodebuild -project "$PROJECT" -scheme "$SCHEME" -configuration "$CONFIG" \
+    -showBuildSettings 2>/dev/null | awk -F' = ' '/ MARKETING_VERSION /{print $2; exit}')"
+  [[ -n "${version:-}" ]] || die "Could not read MARKETING_VERSION."
+  local tag="v$version" notes="docs/releases/v$version.md"
+  info "Version $version  ·  tag $tag"
+  $BUILD_ONLY || [[ -f "$notes" ]] || die "Release notes not found at $notes"
 
-( cd "$DIST" && shasum -a 256 *.dmg *.zip > SHA256SUMS.txt )
-echo "Artifacts:"; ls -lh "$DIST"
+  title "Build"
+  run_step "Compiling $APP_BUNDLE.app ($CONFIG, ad-hoc signed)" \
+    xcodebuild -project "$PROJECT" -scheme "$SCHEME" -configuration "$CONFIG" \
+      -derivedDataPath "$DERIVED" \
+      CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=YES \
+      DEVELOPMENT_TEAM="" clean build
+  local app_path="$DERIVED/Build/Products/$CONFIG/$APP_BUNDLE.app"
+  [[ -d "$app_path" ]] || die "Build succeeded but app not found at $app_path"
+  ok "Built $APP_BUNDLE.app"
 
-if $DRY_RUN; then
-  say "Dry run complete — artifacts are in ./dist (no git/GitHub changes made)."
-  exit 0
-fi
+  if $BUILD_ONLY; then info "Build-only — done."; return; fi
 
-# ----------------------------------------------------------------------------
-# 4. Commit & push
-# ----------------------------------------------------------------------------
-say "Pushing $BRANCH"
-git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "Not a git repository."
-if [[ -n "$(git status --porcelain)" ]]; then
-  git add -A
-  git commit -m "release: $TAG"
-fi
-git push origin "$BRANCH"
+  title "Package"
+  rm -rf "$DIST"; mkdir -p "$DIST"
+  local dmg="$DIST/$APP_NAME-$version.dmg" zip="$DIST/$APP_NAME-$version.app.zip"
+  run_step "Building .dmg" "$ROOT/scripts/make-dmg.sh" "$app_path" "$dmg"
+  run_step "Zipping .app"  ditto -c -k --sequesterRsrc --keepParent "$app_path" "$zip"
+  run_step "Checksums"     bash -c "cd '$DIST' && shasum -a 256 *.dmg *.zip > SHA256SUMS.txt"
+  info "Artifacts in ./dist:  $(cd "$DIST" && ls *.dmg *.zip SHA256SUMS.txt | tr '\n' ' ')"
 
-# ----------------------------------------------------------------------------
-# 5. Tag
-# ----------------------------------------------------------------------------
-say "Tagging $TAG"
-if git rev-parse "$TAG" >/dev/null 2>&1; then
-  echo "Tag $TAG already exists locally — reusing it."
-else
-  git tag -a "$TAG" -m "Hydra Display $TAG"
-fi
-git push origin "$TAG"
+  if $DRY_RUN; then ok "Dry run complete — no git/GitHub changes made."; return; fi
 
-if $SKIP_RELEASE; then
-  say "Stopped before creating the GitHub release (--skip-release)."
-  exit 0
-fi
+  title "Publish"
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "Not a git repository."
+  if [[ -n "$(git status --porcelain)" ]]; then
+    git add -A
+    run_step "Committing release" git commit -m "release: $tag"
+  fi
+  run_step "Pushing $BRANCH" git push origin "$BRANCH"
 
-# ----------------------------------------------------------------------------
-# 6. GitHub release + upload
-# ----------------------------------------------------------------------------
-say "Creating GitHub release $TAG"
-if gh release view "$TAG" --repo "$REPO_SLUG" >/dev/null 2>&1; then
-  echo "Release exists — uploading/overwriting assets."
-  gh release upload "$TAG" "$DMG" "$ZIP" "$DIST/SHA256SUMS.txt" \
-    --repo "$REPO_SLUG" --clobber
-else
-  gh release create "$TAG" "$DMG" "$ZIP" "$DIST/SHA256SUMS.txt" \
-    --repo "$REPO_SLUG" \
-    --title "Hydra Display $TAG" \
-    --notes-file "$NOTES"
-fi
+  if git rev-parse "$tag" >/dev/null 2>&1; then info "Tag $tag already exists — reusing it."
+  else run_step "Tagging $tag" git tag -a "$tag" -m "Hydra Display $tag"; fi
+  run_step "Pushing tag $tag" git push origin "$tag"
 
-say "Done! Release published:"
-echo "https://github.com/$REPO_SLUG/releases/tag/$TAG"
+  if $SKIP_RELEASE; then ok "Stopped before the GitHub release (--skip-release)."; return; fi
+
+  if gh release view "$tag" --repo "$REPO_SLUG" >/dev/null 2>&1; then
+    run_step "Updating GitHub release $tag" \
+      gh release upload "$tag" "$dmg" "$zip" "$DIST/SHA256SUMS.txt" --repo "$REPO_SLUG" --clobber
+  else
+    run_step "Creating GitHub release $tag" \
+      gh release create "$tag" "$dmg" "$zip" "$DIST/SHA256SUMS.txt" \
+        --repo "$REPO_SLUG" --title "Hydra Display $tag" --notes-file "$notes"
+  fi
+  ok "Published: ${B}https://github.com/$REPO_SLUG/releases/tag/$tag${R}"
+}
+
+case "$MODE" in
+  push) do_push ;;
+  full) do_full ;;
+esac
+
+printf "\n${GRN}${B}Done.${R}\n"

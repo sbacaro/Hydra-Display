@@ -29,7 +29,11 @@ gh auth login               # sign in to GitHub (needs repo write access)
    ./scripts/release.sh
    ```
 
-That's it. The script will:
+   It asks what you want to do — **Push only** (just commit & push the current branch)
+   or **Full release**. Pick *Full release* to cut a version. The build runs quietly with
+   a spinner; full output is only shown if a step fails.
+
+For a full release, the script will:
 
 | Step | What it does |
 | ---- | ------------ |
@@ -47,20 +51,24 @@ The final output prints the release URL.
 > attached (the script uploads it automatically). The tag must be `vX.Y.Z` matching
 > `MARKETING_VERSION`.
 
-## Useful flags
+## Flags (skip the prompt)
 
 ```bash
+./scripts/release.sh --push-only      # commit & push the current branch — nothing else
+./scripts/release.sh --full           # the whole release, no prompt
 ./scripts/release.sh --build-only     # just compile the app (no create-dmg / gh needed) — quickest sanity check
 ./scripts/release.sh --dry-run        # build + package the .dmg/.zip; no git/GitHub changes (needs create-dmg)
 ./scripts/release.sh --skip-release   # build, package, push, and tag — but don't create the GitHub release
 ```
+
+CI and other non-interactive callers must pass a flag (the menu only appears on a TTY).
 
 ## Just the DMG
 
 To (re)build only the disk image from an existing `.app`:
 
 ```bash
-scripts/make-dmg.sh /path/to/HydraDisplay.app dist/HydraDisplay.dmg
+scripts/make-dmg.sh "/path/to/Hydra Display.app" dist/HydraDisplay.dmg
 ```
 
 The DMG window layout and the background image live in
@@ -69,5 +77,5 @@ The DMG window layout and the background image live in
 ## Notes for downloaders
 
 The app is **not notarized**. On first launch users must right-click → **Open** (or run
-`xattr -dr com.apple.quarantine /Applications/HydraDisplay.app`). This is documented in
+`xattr -dr com.apple.quarantine "/Applications/Hydra Display.app"`). This is documented in
 the README and in every release's notes.

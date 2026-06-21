@@ -24,7 +24,6 @@ private let kCardContentHeight: CGFloat = 104
 
 struct OverviewView: View {
     @Environment(DisplayManager.self) private var manager
-    var onCreate: () -> Void
 
     private let columns = [GridItem(.adaptive(minimum: 248, maximum: 360),
                                     spacing: Theme.Space.l)]
@@ -37,8 +36,6 @@ struct OverviewView: View {
                     ForEach(manager.allDisplays) { display in
                         DisplayCard(display: display)
                     }
-                    AddDisplayCard(action: onCreate,
-                                   enabled: manager.isVirtualDisplaySupported)
                 }
             }
             .padding(Theme.Space.xl)
@@ -69,9 +66,11 @@ struct OverviewView: View {
 
 private struct DisplayCard: View {
     @Environment(DisplayManager.self) private var manager
+    @Environment(GammaController.self) private var gamma
     @Environment(\.openWindow) private var openWindow
     let display: DisplayInfo
     @State private var hovering = false
+    @State private var showingColor = false
 
     private var handle: VirtualDisplayHandle? {
         display.isVirtualHydra ? manager.handle(for: display.id) : nil
@@ -141,6 +140,21 @@ private struct DisplayCard: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer()
+            Button {
+                showingColor = true
+            } label: {
+                Image(systemName: gamma.isAdjusted(display.id)
+                      ? "sun.max.fill" : "sun.max")
+            }
+            .buttonStyle(.borderless)
+            .foregroundStyle(gamma.isAdjusted(display.id) ? AnyShapeStyle(.tint)
+                                                          : AnyShapeStyle(.secondary))
+            .help("Brightness & color temperature")
+            .popover(isPresented: $showingColor, arrowEdge: .bottom) {
+                DisplayColorControls(displayID: display.id)
+                    .frame(width: 260)
+                    .padding(Theme.Space.l)
+            }
             ResolutionMenu(displayID: display.id, compact: true)
                 .menuStyle(.borderlessButton)
                 .fixedSize()
@@ -159,39 +173,3 @@ private struct DisplayCard: View {
     }
 }
 
-// MARK: - Add card (subtle, not loud)
-
-private struct AddDisplayCard: View {
-    var action: () -> Void
-    var enabled: Bool
-    @State private var hovering = false
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: Theme.Space.s) {
-                Image(systemName: "plus")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(.tint)
-                    .frame(width: 40, height: 40)
-                    .background(.tint.opacity(0.14), in: Theme.card(Theme.Radius.inner))
-                Text("New Virtual Display")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.primary)
-            }
-            .frame(maxWidth: .infinity, minHeight: kCardContentHeight,
-                   maxHeight: kCardContentHeight)
-            .surfaceCard()
-            .overlay {
-                Theme.card().strokeBorder(.tint.opacity(hovering ? 0.55 : 0.3), lineWidth: 1)
-            }
-            .contentShape(Theme.card())
-        }
-        .buttonStyle(.plain)
-        .shadow(color: .black.opacity(hovering ? 0.16 : 0.05),
-                radius: hovering ? 12 : 4, y: hovering ? 5 : 2)
-        .opacity(enabled ? 1 : 0.4)
-        .animation(.smooth(duration: 0.18), value: hovering)
-        .onHover { hovering = $0 }
-        .disabled(!enabled)
-    }
-}

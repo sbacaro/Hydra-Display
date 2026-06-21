@@ -74,7 +74,7 @@ final class PiPStreamController {
         do {
             let content = try await SCShareableContent.current
             let config = SCStreamConfiguration()
-            config.showsCursor = true
+            config.showsCursor = false   // don't draw the pointer into the PIP feed
             config.pixelFormat = kCVPixelFormatType_32BGRA
             config.queueDepth = 5
             config.minimumFrameInterval = CMTime(value: 1, timescale: 60)
@@ -102,6 +102,7 @@ final class PiPStreamController {
             isRunning = true
             errorText = nil
         } catch {
+            Log.capture.error("PIP capture failed: \(error.localizedDescription, privacy: .public)")
             errorText = error.localizedDescription
             isRunning = false
         }

@@ -24,6 +24,8 @@ struct HydraDisplayApp: App {
     @State private var manager = DisplayManager.shared
     @State private var settings = AppSettings()
     @State private var updater = Updater()
+    @State private var gamma = GammaController.shared
+    @State private var pip = PiPManager.shared
 
     var body: some Scene {
         Window(AppInfo.name, id: "main") {
@@ -31,8 +33,10 @@ struct HydraDisplayApp: App {
                 .environment(manager)
                 .environment(settings)
                 .environment(updater)
+                .environment(gamma)
                 .frame(minWidth: 760, minHeight: 520)
                 .task {
+                    Log.app.info("\(AppInfo.versionString, privacy: .public) launched")
                     if settings.autoCheckUpdates && !AppEnvironment.isUnitTesting {
                         await updater.check()
                     }
@@ -80,6 +84,7 @@ struct HydraDisplayApp: App {
             MenuBarView()
                 .environment(manager)
                 .environment(updater)
+                .environment(pip)
         }
         .menuBarExtraStyle(.window)
     }

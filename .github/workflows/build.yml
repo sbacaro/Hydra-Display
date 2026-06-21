@@ -76,7 +76,7 @@ jobs:
       - name: Package app
         if: steps.sdk.outputs.available == 'true'
         run: |
-          APP="build/Build/Products/Release/HydraDisplay.app"
+          APP="build/Build/Products/Release/Hydra Display.app"
           if [ -d "$APP" ]; then
             ditto -c -k --sequesterRsrc --keepParent "$APP" HydraDisplay.app.zip
           fi

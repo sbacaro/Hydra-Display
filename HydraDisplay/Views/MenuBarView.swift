@@ -21,6 +21,7 @@ import SwiftUI
 struct MenuBarView: View {
     @Environment(DisplayManager.self) private var manager
     @Environment(Updater.self) private var updater
+    @Environment(PiPManager.self) private var pip
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -39,6 +40,11 @@ struct MenuBarView: View {
             }
 
             activeDisplays
+
+            if !pip.sessions.isEmpty {
+                Divider()
+                pipSection
+            }
 
             Divider()
 
@@ -164,6 +170,44 @@ struct MenuBarView: View {
                     .padding(.horizontal, Theme.Space.s)
                     .background(.quaternary.opacity(0.4), in: Theme.card(Theme.Radius.chip))
                 }
+            }
+        }
+    }
+
+    // MARK: Picture in Picture
+
+    private var pipSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.xs) {
+            Text("Picture in Picture")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+            ForEach(pip.sessions) { session in
+                HStack(spacing: Theme.Space.s) {
+                    Image(systemName: "pip").foregroundStyle(.tint)
+                    Text(session.title).font(.callout).lineLimit(1)
+                    Spacer()
+                    Button {
+                        session.setClickThrough(!session.clickThrough)
+                    } label: {
+                        Image(systemName: session.clickThrough
+                              ? "cursorarrow.click.badge.clock" : "cursorarrow")
+                            .foregroundStyle(session.clickThrough ? AnyShapeStyle(.tint)
+                                                                  : AnyShapeStyle(.secondary))
+                    }
+                    .buttonStyle(.plain)
+                    .help(session.clickThrough ? "Disable click-through" : "Enable click-through")
+                    Button {
+                        session.close()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Close")
+                }
+                .padding(.vertical, 3)
+                .padding(.horizontal, Theme.Space.s)
+                .background(.quaternary.opacity(0.4), in: Theme.card(Theme.Radius.chip))
             }
         }
     }

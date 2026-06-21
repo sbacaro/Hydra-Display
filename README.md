@@ -74,6 +74,15 @@ Pre-built releases are published on the [Releases](../../releases) page.
 
 See [docs/PRIVATE_API.md](docs/PRIVATE_API.md) for why notarization isn't possible.
 
+## Updating
+
+Hydra Display updates itself. It checks GitHub Releases on launch (toggle in
+**Settings → Updates**) and, when a newer version exists, shows an **Update available**
+badge in the sidebar and menu bar. Choosing **Update Now** downloads the new build and
+installs it in place — the only visible step is the standard macOS authentication
+dialog (the privileged file swap runs without any terminal). You can also trigger it
+from **Hydra Display → Check for Updates…**.
+
 ## Build from source
 
 ```bash
@@ -144,10 +153,13 @@ HydraDisplay/                     # Repository root
 
 ## Roadmap
 
-- [ ] Persist virtual displays across app launches
-- [ ] Per-display resolution switching from the menu bar
+- [x] Persist virtual displays across app launches
+- [x] Open at login
+- [x] Live per-display resolution switching
+- [x] App Intents / Shortcuts actions
+- [x] First-run onboarding
 - [ ] Custom EDID / display identity options
-- [ ] Localization (the UI is currently English-only)
+- [x] Localization (English + Brazilian Portuguese)
 - [ ] Light/dark screenshots and a short demo GIF
 
 Have an idea? [Open a feature request](../../issues/new/choose).

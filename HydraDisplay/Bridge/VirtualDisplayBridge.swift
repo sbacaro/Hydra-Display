@@ -34,7 +34,7 @@ struct VirtualDisplayMode: Hashable, Codable, Identifiable {
 }
 
 /// Parameters used to spin up a brand-new virtual display.
-struct VirtualDisplaySpec {
+struct VirtualDisplaySpec: Codable, Equatable {
     var name: String
     var widthMillimeters: Double
     var heightMillimeters: Double

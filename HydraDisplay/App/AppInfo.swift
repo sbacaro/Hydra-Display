@@ -22,6 +22,15 @@
 
 import Foundation
 
+/// Small environment probes.
+enum AppEnvironment {
+    /// True when the app is hosting a unit-test bundle. Used to suppress side
+    /// effects (display restore, update checks) while tests run.
+    static var isUnitTesting: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
+}
+
 enum AppInfo {
 
     // MARK: Identity

@@ -19,6 +19,7 @@ import SwiftUI
 
 struct DisplayDetailView: View {
     @Environment(DisplayManager.self) private var manager
+    @Environment(\.openWindow) private var openWindow
     let handle: VirtualDisplayHandle
 
     private var liveInfo: DisplayInfo? {
@@ -30,8 +31,10 @@ struct DisplayDetailView: View {
             VStack(alignment: .leading, spacing: Theme.Space.l) {
                 hero
                 identitySection
+                resolutionSection
                 modesSection
                 mirrorSection
+                viewerButton
                 removeButton
             }
             .padding(Theme.Space.xl)
@@ -75,6 +78,23 @@ struct DisplayDetailView: View {
                     value: "\(handle.spec.maxPixelsWide) × \(handle.spec.maxPixelsHigh)")
             Divider()
             InfoRow(label: "HiDPI", value: handle.spec.hiDPI ? "On (2×)" : "Off")
+        }
+    }
+
+    private var resolutionSection: some View {
+        SectionCard("Resolution", systemImage: "slider.horizontal.3") {
+            if liveInfo != nil {
+                HStack {
+                    Text("Active resolution").foregroundStyle(.secondary)
+                    Spacer()
+                    ResolutionMenu(displayID: handle.cgDisplayID)
+                }
+                Text("Switch the live resolution of this display.")
+                    .font(.caption).foregroundStyle(.secondary)
+            } else {
+                Text("Waiting for the display to come online…")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -133,6 +153,19 @@ struct DisplayDetailView: View {
                 }
             }
         }
+    }
+
+    private var viewerButton: some View {
+        Button {
+            openWindow(id: "pip", value: CaptureSource.display(handle.cgDisplayID,
+                                                               title: handle.spec.name))
+        } label: {
+            Label("Open as Picture in Picture", systemImage: "pip")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.large)
+        .disabled(liveInfo == nil)
     }
 
     private var removeButton: some View {

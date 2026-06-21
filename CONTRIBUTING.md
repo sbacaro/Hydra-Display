@@ -52,6 +52,27 @@ out, and [docs/PRIVATE_API.md](docs/PRIVATE_API.md) before touching the
 - A `.swiftlint.yml` is included. If you have SwiftLint installed, run `swiftlint`
   before committing. CI does not block on lint, but a clean run is appreciated.
 
+## Running the tests
+
+The project ships a full test suite. In Xcode press **⌘U**, or from the command line:
+
+```bash
+# Everything (unit + UI)
+xcodebuild -project HydraDisplay.xcodeproj -scheme HydraDisplay \
+  -destination 'platform=macOS' test
+
+# Unit tests only (fast, no UI automation)
+xcodebuild -project HydraDisplay.xcodeproj -scheme HydraDisplay \
+  -destination 'platform=macOS' -only-testing:HydraDisplayTests test
+```
+
+- **`HydraDisplayTests`** — Swift Testing unit tests for the models and logic
+  (resolution presets, the virtual-display model, persistence, the updater's version
+  comparison and JSON parsing, `AppInfo`, settings, and the display manager).
+- **`HydraDisplayUITests`** — XCUITest smoke tests for launch and navigation.
+
+CI runs the unit tests automatically once a macOS 26 runner is available.
+
 ## Submitting a pull request
 
 1. Make sure the app builds and runs.

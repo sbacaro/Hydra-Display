@@ -58,6 +58,21 @@ jobs:
             DEVELOPMENT_TEAM="" \
             clean build
 
+      - name: Run unit tests
+        if: steps.sdk.outputs.available == 'true'
+        run: |
+          xcodebuild \
+            -project HydraDisplay.xcodeproj \
+            -scheme HydraDisplay \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            -only-testing:HydraDisplayTests \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=YES \
+            DEVELOPMENT_TEAM="" \
+            test
+
       - name: Package app
         if: steps.sdk.outputs.available == 'true'
         run: |

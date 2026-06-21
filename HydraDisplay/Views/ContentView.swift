@@ -20,11 +20,16 @@ import SwiftUI
 enum SidebarItem: Hashable {
     case overview
     case arrangement
+    case profiles
+    case pip
     case display(UUID)
 }
 
 struct ContentView: View {
     @Environment(DisplayManager.self) private var manager
+    @Environment(Updater.self) private var updater
+    @Environment(AppSettings.self) private var settings
+    @Environment(\.openWindow) private var openWindow
     @State private var selection: SidebarItem? = .overview
     @State private var showingCreateSheet = false
 
@@ -32,9 +37,15 @@ struct ContentView: View {
         NavigationSplitView {
             sidebar
                 .navigationSplitViewColumnWidth(min: 224, ideal: 252, max: 320)
+                .safeAreaInset(edge: .bottom) {
+                    if updater.phase == .available { updateBanner }
+                }
         } detail: {
             detail
                 .toolbar { toolbarContent }
+                .sheet(isPresented: onboardingBinding) {
+                    OnboardingView().environment(settings)
+                }
         }
         .sheet(isPresented: $showingCreateSheet) {
             CreateDisplaySheet()
@@ -55,6 +66,14 @@ struct ContentView: View {
         }
     }
 
+    // MARK: Onboarding
+
+    private var onboardingBinding: Binding<Bool> {
+        Binding(
+            get: { !settings.hasCompletedOnboarding && !AppEnvironment.isUnitTesting },
+            set: { presented in if !presented { settings.hasCompletedOnboarding = true } })
+    }
+
     // MARK: Toolbar
 
     @ToolbarContentBuilder
@@ -70,6 +89,44 @@ struct ContentView: View {
         }
     }
 
+    // MARK: Update banner (sidebar footer)
+
+    private var updateBanner: some View {
+        Button {
+            openWindow(id: "about")
+            NSApp.activate(ignoringOtherApps: true)
+        } label: {
+            HStack(spacing: Theme.Space.s) {
+                Image(systemName: "arrow.down.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(.tint)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Update available")
+                        .font(.callout.weight(.medium))
+                    if let v = updater.availableVersion {
+                        Text("Version \(v)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(Theme.Space.s)
+            .background(.tint.opacity(0.12), in: Theme.card(Theme.Radius.inner))
+            .overlay {
+                Theme.card(Theme.Radius.inner)
+                    .strokeBorder(.tint.opacity(0.3), lineWidth: 1)
+            }
+            .contentShape(Theme.card(Theme.Radius.inner))
+        }
+        .buttonStyle(.plain)
+        .padding(Theme.Space.s)
+    }
+
     // MARK: Sidebar
 
     private var sidebar: some View {
@@ -79,6 +136,10 @@ struct ContentView: View {
                     .tag(SidebarItem.overview)
                 Label("Arrangement & Mirroring", systemImage: "rectangle.3.group")
                     .tag(SidebarItem.arrangement)
+                Label("Profiles", systemImage: "square.stack.3d.up")
+                    .tag(SidebarItem.profiles)
+                Label("Picture in Picture", systemImage: "pip")
+                    .tag(SidebarItem.pip)
             }
 
             Section {
@@ -125,6 +186,10 @@ struct ContentView: View {
             OverviewView(onCreate: { showingCreateSheet = true })
         case .arrangement:
             ArrangementView()
+        case .profiles:
+            ProfilesView()
+        case .pip:
+            PiPSourcePickerView()
         case .display(let id):
             if let handle = manager.virtualHandles.first(where: { $0.id == id }) {
                 DisplayDetailView(handle: handle)

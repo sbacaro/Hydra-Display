@@ -18,6 +18,8 @@
 import SwiftUI
 
 struct AboutView: View {
+    @Environment(Updater.self) private var updater
+
     var body: some View {
         VStack(spacing: Theme.Space.l) {
             appIcon
@@ -38,6 +40,8 @@ struct AboutView: View {
                 .padding(.vertical, Theme.Space.xs)
                 .background(.quaternary.opacity(0.5), in: Capsule())
 
+            updateSection
+
             links
 
             Spacer(minLength: 0)
@@ -52,7 +56,7 @@ struct AboutView: View {
             .multilineTextAlignment(.center)
         }
         .padding(Theme.Space.xl)
-        .frame(width: 380, height: 460)
+        .frame(width: 390, height: 520)
         .background(.regularMaterial)
     }
 
@@ -61,6 +65,51 @@ struct AboutView: View {
             .resizable()
             .frame(width: 116, height: 116)
             .accessibilityLabel("\(AppInfo.name) app icon")
+    }
+
+    @ViewBuilder
+    private var updateSection: some View {
+        switch updater.phase {
+        case .idle, .upToDate:
+            VStack(spacing: Theme.Space.xs) {
+                if updater.phase == .upToDate {
+                    Label("You're up to date", systemImage: "checkmark.circle")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Button("Check for Updates") { Task { await updater.check() } }
+                    .buttonStyle(.bordered).controlSize(.large)
+            }
+        case .checking:
+            statusRow("Checking for updates…")
+        case .available:
+            VStack(spacing: Theme.Space.xs) {
+                Label("Update available — \(updater.availableVersion ?? "")",
+                      systemImage: "arrow.down.circle")
+                    .font(.callout.weight(.medium)).foregroundStyle(.tint)
+                Button("Update Now") { Task { await updater.update() } }
+                    .buttonStyle(.borderedProminent).controlSize(.large)
+            }
+        case .downloading:
+            statusRow("Downloading update…")
+        case .installing:
+            statusRow("Installing — authenticate when prompted…")
+        case .failed(let message):
+            VStack(spacing: Theme.Space.xs) {
+                Label(message, systemImage: "exclamationmark.triangle")
+                    .font(.caption).foregroundStyle(.orange)
+                    .multilineTextAlignment(.center)
+                Button("Try Again") { Task { await updater.check() } }
+                    .buttonStyle(.bordered).controlSize(.small)
+            }
+        }
+    }
+
+    private func statusRow(_ text: String) -> some View {
+        HStack(spacing: Theme.Space.s) {
+            ProgressView().controlSize(.small)
+            Text(text)
+        }
+        .font(.callout).foregroundStyle(.secondary)
     }
 
     private var links: some View {

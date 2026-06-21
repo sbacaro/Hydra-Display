@@ -6,20 +6,76 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		AA000000000000000000001A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA0000000000000000000005;
+			remoteInfo = HydraDisplay;
+		};
+		AA0000000000000000000025 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA0000000000000000000005;
+			remoteInfo = HydraDisplay;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		AA0000000000000000000006 /* HydraDisplay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HydraDisplay.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000012 /* HydraDisplayTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HydraDisplayTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000000000000000000001D /* HydraDisplayUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HydraDisplayUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		AA0000000000000000000004 /* HydraDisplay */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AA00000000000000000000F0 /* Exceptions for "HydraDisplay" folder in "HydraDisplay" target */,
+			);
 			path = HydraDisplay;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000010 /* HydraDisplayTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = HydraDisplayTests;
+			sourceTree = "<group>";
+		};
+		AA000000000000000000001B /* HydraDisplayUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = HydraDisplayUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AA00000000000000000000F0 /* Exceptions for "HydraDisplay" folder in "HydraDisplay" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AA0000000000000000000005 /* HydraDisplay */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		AA0000000000000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000014 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA000000000000000000001F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +89,8 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000004 /* HydraDisplay */,
+				AA0000000000000000000010 /* HydraDisplayTests */,
+				AA000000000000000000001B /* HydraDisplayUITests */,
 				AA0000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +99,8 @@
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000006 /* HydraDisplay.app */,
+				AA0000000000000000000012 /* HydraDisplayTests.xctest */,
+				AA000000000000000000001D /* HydraDisplayUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -68,6 +128,48 @@
 			productReference = AA0000000000000000000006 /* HydraDisplay.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AA0000000000000000000011 /* HydraDisplayTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000016 /* Build configuration list for PBXNativeTarget "HydraDisplayTests" */;
+			buildPhases = (
+				AA0000000000000000000013 /* Sources */,
+				AA0000000000000000000014 /* Frameworks */,
+				AA0000000000000000000015 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA0000000000000000000019 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AA0000000000000000000010 /* HydraDisplayTests */,
+			);
+			name = HydraDisplayTests;
+			productName = HydraDisplayTests;
+			productReference = AA0000000000000000000012 /* HydraDisplayTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		AA000000000000000000001C /* HydraDisplayUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000021 /* Build configuration list for PBXNativeTarget "HydraDisplayUITests" */;
+			buildPhases = (
+				AA000000000000000000001E /* Sources */,
+				AA000000000000000000001F /* Frameworks */,
+				AA0000000000000000000020 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA0000000000000000000024 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AA000000000000000000001B /* HydraDisplayUITests */,
+			);
+			name = HydraDisplayUITests;
+			productName = HydraDisplayUITests;
+			productReference = AA000000000000000000001D /* HydraDisplayUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -81,6 +183,14 @@
 					AA0000000000000000000005 = {
 						CreatedOnToolsVersion = 26.5;
 					};
+					AA0000000000000000000011 = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = AA0000000000000000000005;
+					};
+					AA000000000000000000001C = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = AA0000000000000000000005;
+					};
 				};
 			};
 			buildConfigurationList = AA000000000000000000000A /* Build configuration list for PBXProject "HydraDisplay" */;
@@ -89,6 +199,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"pt-BR",
 			);
 			mainGroup = AA0000000000000000000002;
 			minimizedProjectReferenceProxies = 1;
@@ -98,12 +209,28 @@
 			projectRoot = "";
 			targets = (
 				AA0000000000000000000005 /* HydraDisplay */,
+				AA0000000000000000000011 /* HydraDisplayTests */,
+				AA000000000000000000001C /* HydraDisplayUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		AA0000000000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000015 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000000000000000000020 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -120,7 +247,34 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA0000000000000000000013 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA000000000000000000001E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AA0000000000000000000019 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA0000000000000000000005 /* HydraDisplay */;
+			targetProxy = AA000000000000000000001A /* PBXContainerItemProxy */;
+		};
+		AA0000000000000000000024 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA0000000000000000000005 /* HydraDisplay */;
+			targetProxy = AA0000000000000000000025 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		AA000000000000000000000C /* Debug */ = {
@@ -249,14 +403,13 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright (C) 2026 Hydra Display contributors. Licensed under the GNU GPL v3.0 or later.";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "HydraDisplay/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = (
 					"-framework",
 					CoreGraphics,
@@ -281,14 +434,13 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright (C) 2026 Hydra Display contributors. Licensed under the GNU GPL v3.0 or later.";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "HydraDisplay/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				OTHER_LDFLAGS = (
 					"-framework",
 					CoreGraphics,
@@ -298,6 +450,84 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "HydraDisplay/HydraDisplay-Bridging-Header.h";
 				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		AA0000000000000000000017 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hydradisplay.HydraDisplayTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HydraDisplay.app/Contents/MacOS/HydraDisplay";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000018 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hydradisplay.HydraDisplayTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HydraDisplay.app/Contents/MacOS/HydraDisplay";
+			};
+			name = Release;
+		};
+		AA0000000000000000000022 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hydradisplay.HydraDisplayUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TEST_TARGET_NAME = HydraDisplay;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000023 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.hydradisplay.HydraDisplayUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TEST_TARGET_NAME = HydraDisplay;
 			};
 			name = Release;
 		};
@@ -318,6 +548,24 @@
 			buildConfigurations = (
 				AA000000000000000000000E /* Debug */,
 				AA000000000000000000000F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000016 /* Build configuration list for PBXNativeTarget "HydraDisplayTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000017 /* Debug */,
+				AA0000000000000000000018 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000000000000000000021 /* Build configuration list for PBXNativeTarget "HydraDisplayUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000022 /* Debug */,
+				AA0000000000000000000023 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

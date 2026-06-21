@@ -18,6 +18,10 @@
 
 import SwiftUI
 
+/// Shared inner content height so every card in the grid renders identically
+/// (total card height = this + surfaceCard padding on both sides).
+private let kCardContentHeight: CGFloat = 104
+
 struct OverviewView: View {
     @Environment(DisplayManager.self) private var manager
     var onCreate: () -> Void
@@ -65,6 +69,7 @@ struct OverviewView: View {
 
 private struct DisplayCard: View {
     @Environment(DisplayManager.self) private var manager
+    @Environment(\.openWindow) private var openWindow
     let display: DisplayInfo
     @State private var hovering = false
 
@@ -98,12 +103,23 @@ private struct DisplayCard: View {
 
             footer
         }
-        .frame(maxWidth: .infinity, minHeight: 132, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: kCardContentHeight,
+               maxHeight: kCardContentHeight, alignment: .topLeading)
         .surfaceCard(tinted: display.isVirtualHydra)
         .shadow(color: .black.opacity(hovering ? 0.16 : 0.05),
                 radius: hovering ? 12 : 4, y: hovering ? 5 : 2)
         .animation(.smooth(duration: 0.18), value: hovering)
         .onHover { hovering = $0 }
+        .contextMenu {
+            Button("Open as Picture in Picture", systemImage: "pip") {
+                openWindow(id: "pip", value: CaptureSource.display(display.id, title: display.name))
+            }
+            if let handle {
+                Button("Remove", systemImage: "trash", role: .destructive) {
+                    manager.remove(handle)
+                }
+            }
+        }
     }
 
     private var iconTile: some View {
@@ -118,14 +134,18 @@ private struct DisplayCard: View {
                 in: Theme.card(Theme.Radius.inner))
     }
 
-    @ViewBuilder
     private var footer: some View {
-        if let handle {
-            HStack(spacing: Theme.Space.s) {
-                Label("Virtual display", systemImage: "sparkles")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
+        HStack(spacing: Theme.Space.s) {
+            Label(display.isVirtualHydra ? "Virtual display" : "Physical display",
+                  systemImage: display.isVirtualHydra ? "sparkles" : "cable.connector")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer()
+            ResolutionMenu(displayID: display.id, compact: true)
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .foregroundStyle(.secondary)
+            if let handle {
                 Button {
                     manager.remove(handle)
                 } label: {
@@ -135,10 +155,6 @@ private struct DisplayCard: View {
                 .foregroundStyle(.secondary)
                 .help("Remove \(display.name)")
             }
-        } else {
-            Label("Physical display", systemImage: "cable.connector")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 }
@@ -162,19 +178,19 @@ private struct AddDisplayCard: View {
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.primary)
             }
-            .frame(maxWidth: .infinity, minHeight: 132)
+            .frame(maxWidth: .infinity, minHeight: kCardContentHeight,
+                   maxHeight: kCardContentHeight)
+            .surfaceCard()
+            .overlay {
+                Theme.card().strokeBorder(.tint.opacity(hovering ? 0.55 : 0.3), lineWidth: 1)
+            }
             .contentShape(Theme.card())
         }
         .buttonStyle(.plain)
-        .background {
-            Theme.card()
-                .fill(.quaternary.opacity(hovering ? 0.5 : 0.3))
-        }
-        .overlay {
-            Theme.card().strokeBorder(.separator.opacity(0.7), lineWidth: 0.5)
-        }
+        .shadow(color: .black.opacity(hovering ? 0.16 : 0.05),
+                radius: hovering ? 12 : 4, y: hovering ? 5 : 2)
         .opacity(enabled ? 1 : 0.4)
-        .animation(.smooth(duration: 0.15), value: hovering)
+        .animation(.smooth(duration: 0.18), value: hovering)
         .onHover { hovering = $0 }
         .disabled(!enabled)
     }

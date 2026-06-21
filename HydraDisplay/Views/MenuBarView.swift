@@ -20,11 +20,16 @@ import SwiftUI
 
 struct MenuBarView: View {
     @Environment(DisplayManager.self) private var manager
+    @Environment(Updater.self) private var updater
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.m) {
             header
+
+            if updater.phase == .available {
+                updateRow
+            }
 
             if !manager.isVirtualDisplaySupported {
                 Label("Private virtual-display API unavailable on this macOS.",
@@ -60,6 +65,13 @@ struct MenuBarView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
 
+                SettingsLink {
+                    Image(systemName: "gearshape")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .help("Settings…")
+
                 Button {
                     NSApp.terminate(nil)
                 } label: {
@@ -89,6 +101,34 @@ struct MenuBarView: View {
                 .padding(.vertical, 2)
                 .background(.quaternary.opacity(0.6), in: Capsule())
         }
+    }
+
+    // MARK: Update row
+
+    private var updateRow: some View {
+        Button {
+            openWindow(id: "about")
+            NSApp.activate(ignoringOtherApps: true)
+        } label: {
+            HStack(spacing: Theme.Space.s) {
+                Image(systemName: "arrow.down.circle.fill").foregroundStyle(.tint)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Update available").font(.callout.weight(.medium))
+                    if let v = updater.availableVersion {
+                        Text("Version \(v)")
+                            .font(.caption2).foregroundStyle(.secondary).monospacedDigit()
+                    }
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
+            }
+            .padding(.vertical, Theme.Space.xs)
+            .padding(.horizontal, Theme.Space.s)
+            .frame(maxWidth: .infinity)
+            .background(.tint.opacity(0.14), in: Theme.card(Theme.Radius.chip))
+            .contentShape(Theme.card(Theme.Radius.chip))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: Active displays

@@ -42,6 +42,11 @@ That's it. The script will:
 
 The final output prints the release URL.
 
+> **Auto-update depends on the `.app.zip` asset.** The in-app updater downloads the
+> `HydraDisplay-<version>.app.zip` from the latest release, so always keep that asset
+> attached (the script uploads it automatically). The tag must be `vX.Y.Z` matching
+> `MARKETING_VERSION`.
+
 ## Useful flags
 
 ```bash

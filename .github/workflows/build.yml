@@ -14,22 +14,38 @@ concurrency:
 jobs:
   build:
     name: Build (Release, ad-hoc)
-    # Hydra Display targets macOS 26 (Tahoe) and requires the macOS 26 SDK.
-    # Use the newest available macOS runner; switch to `macos-26` once GitHub
-    # offers it as a hosted image.
+    # Hydra Display targets macOS 26 (Tahoe) and uses Liquid Glass APIs that
+    # only exist in the macOS 26 SDK (Xcode 26). GitHub's hosted runners don't
+    # ship Xcode 26 yet, so this job auto-detects the SDK and skips the build
+    # (staying green) until a macOS 26 runner image is available. Switch
+    # `runs-on` to `macos-26` once GitHub offers it.
     runs-on: macos-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Show toolchain
+      - name: Select newest Xcode
         run: |
-          sw_vers
-          xcodebuild -version
-          xcodebuild -showsdks | grep -i macos || true
+          newest="$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1 || true)"
+          if [ -n "$newest" ]; then
+            sudo xcode-select -s "$newest/Contents/Developer"
+          fi
+          xcodebuild -version || true
+
+      - name: Check for the macOS 26 SDK
+        id: sdk
+        run: |
+          if xcodebuild -showsdks 2>/dev/null | grep -qi "macosx26"; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "macOS 26 SDK found — will build."
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Build skipped::The macOS 26 SDK (Xcode 26) is not available on this runner yet. Hydra Display requires it for the Liquid Glass APIs, so the build is skipped. Build locally with Xcode 26."
+          fi
 
       - name: Build
+        if: steps.sdk.outputs.available == 'true'
         run: |
           xcodebuild \
             -project HydraDisplay.xcodeproj \
@@ -43,6 +59,7 @@ jobs:
             clean build
 
       - name: Package app
+        if: steps.sdk.outputs.available == 'true'
         run: |
           APP="build/Build/Products/Release/HydraDisplay.app"
           if [ -d "$APP" ]; then
@@ -50,7 +67,7 @@ jobs:
           fi
 
       - name: Upload artifact
-        if: success()
+        if: steps.sdk.outputs.available == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: HydraDisplay-app

@@ -45,7 +45,8 @@ The final output prints the release URL.
 ## Useful flags
 
 ```bash
-./scripts/release.sh --dry-run        # build + package only; no git/GitHub changes
+./scripts/release.sh --build-only     # just compile the app (no create-dmg / gh needed) — quickest sanity check
+./scripts/release.sh --dry-run        # build + package the .dmg/.zip; no git/GitHub changes (needs create-dmg)
 ./scripts/release.sh --skip-release   # build, package, push, and tag — but don't create the GitHub release
 ```
 

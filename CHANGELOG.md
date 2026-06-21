@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Single `AppInfo` source of truth for the app's edition (name, version, links,
   legal strings) — consumed across the whole app.
 - Ad-hoc "Sign to Run Locally" build configuration (no Developer ID required).
+- Built with the **Swift 6** language mode (strict concurrency).
 
 [Unreleased]: https://github.com/sbacaro/Hydra-Display/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/sbacaro/Hydra-Display/releases/tag/v0.1.0

@@ -11,7 +11,7 @@ spinning up virtual (HiDPI/Retina) displays in a couple of clicks.
 Built 100% natively for **macOS 26 (Tahoe)** with a SwiftUI **Liquid Glass** interface.
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2026%2B-1d1d1f?logo=apple)](https://www.apple.com/macos/)
-[![Swift](https://img.shields.io/badge/Swift-5-F05138?logo=swift&logoColor=white)](https://swift.org)
+[![Swift](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](https://swift.org)
 [![UI](https://img.shields.io/badge/UI-SwiftUI%20·%20Liquid%20Glass-007AFF)](https://developer.apple.com/design/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-FF9500.svg)](LICENSE)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)

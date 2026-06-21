@@ -100,10 +100,13 @@ shares the same rhythm.
 
 ## Threading
 
-All UI state lives on the main actor (`DisplayManager` is `@MainActor`). The private
-descriptor uses a background dispatch queue internally, but the bridge marshals results
-back before the manager touches them. CoreGraphics registration is asynchronous, so the
-manager re-enumerates shortly after create/remove with a short delay.
+The project is built with the **Swift 6 language mode** (strict concurrency), so the
+compiler enforces data-race safety. All UI state lives on the main actor
+(`DisplayManager` is `@MainActor`). The private descriptor uses a background dispatch
+queue internally, but the bridge marshals results back before the manager touches them.
+CoreGraphics registration is asynchronous, so the manager re-enumerates shortly after
+create/remove via `scheduleRefresh(after:)`, which hops back to the main actor with a
+structured `Task` instead of a bare dispatch closure.
 
 ## Extending the app
 

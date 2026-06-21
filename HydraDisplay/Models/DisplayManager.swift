@@ -74,9 +74,7 @@ final class DisplayManager {
             let handle = try VirtualDisplayBridge.create(spec)
             virtualHandles.append(handle)
             // Give CoreGraphics a beat to register the new display.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-                self?.refresh()
-            }
+            scheduleRefresh(after: .milliseconds(300))
             return handle
         } catch {
             lastError = error.localizedDescription
@@ -87,20 +85,24 @@ final class DisplayManager {
     func remove(_ handle: VirtualDisplayHandle) {
         // Dropping the only strong reference tears the display down.
         virtualHandles.removeAll { $0.id == handle.id }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-            self?.refresh()
-        }
+        scheduleRefresh(after: .milliseconds(200))
     }
 
     func removeAll() {
         virtualHandles.removeAll()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-            self?.refresh()
-        }
+        scheduleRefresh(after: .milliseconds(200))
     }
 
     func handle(for displayID: CGDirectDisplayID) -> VirtualDisplayHandle? {
         virtualHandles.first { $0.cgDisplayID == displayID }
+    }
+
+    /// Re-enumerate after a short delay, staying on the main actor (Swift 6 safe).
+    private func scheduleRefresh(after delay: Duration) {
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: delay)
+            self?.refresh()
+        }
     }
 
     // MARK: - Mirroring (public CGConfigureDisplayMirrorOfDisplay)

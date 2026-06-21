@@ -40,10 +40,12 @@ DIST="$ROOT/dist"
 
 DRY_RUN=false
 SKIP_RELEASE=false
+BUILD_ONLY=false
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=true ;;
     --skip-release) SKIP_RELEASE=true ;;
+    --build-only) BUILD_ONLY=true; DRY_RUN=true ;;
     *) echo "Unknown option: $arg" >&2; exit 2 ;;
   esac
 done
@@ -56,7 +58,9 @@ die() { printf "\033[1;31merror:\033[0m %s\n" "$1" >&2; exit 1; }
 # ----------------------------------------------------------------------------
 say "Checking tools"
 command -v xcodebuild >/dev/null || die "xcodebuild not found (install Xcode 26+)."
-command -v create-dmg >/dev/null || die "create-dmg not found — run: brew install create-dmg"
+if ! $BUILD_ONLY; then
+  command -v create-dmg >/dev/null || die "create-dmg not found — run: brew install create-dmg"
+fi
 if ! $DRY_RUN; then
   command -v gh >/dev/null || die "GitHub CLI not found — run: brew install gh"
   gh auth status >/dev/null 2>&1 || die "Not signed in to GitHub — run: gh auth login"
@@ -74,7 +78,9 @@ VERSION="$(xcodebuild -project "$PROJECT" -scheme "$SCHEME" -configuration "$CON
 TAG="v$VERSION"
 NOTES="docs/releases/$TAG.md"
 echo "Version: $VERSION   Tag: $TAG"
-[[ -f "$NOTES" ]] || die "Release notes not found at $NOTES"
+if ! $BUILD_ONLY; then
+  [[ -f "$NOTES" ]] || die "Release notes not found at $NOTES"
+fi
 
 # ----------------------------------------------------------------------------
 # 2. Build
@@ -94,6 +100,12 @@ xcodebuild \
 
 APP_PATH="$DERIVED/Build/Products/$CONFIG/$APP_NAME.app"
 [[ -d "$APP_PATH" ]] || die "Build succeeded but app not found at $APP_PATH"
+
+if $BUILD_ONLY; then
+  say "Build-only complete — the app compiled cleanly (Swift 6)."
+  echo "App: $APP_PATH"
+  exit 0
+fi
 
 # ----------------------------------------------------------------------------
 # 3. Package: .dmg + .zip + checksums
